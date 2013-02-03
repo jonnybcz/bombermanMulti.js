@@ -1,0 +1,27 @@
+extends layout
+
+block content
+  #clouds
+    .cloud.x1
+    .cloud.x2
+    .cloud.x3
+    .cloud.x4
+    .cloud.x5
+    #game
+        canvas#cns
+
+
+  script
+    // takhle piseme skripty
+    JAK.ServiceLocator.addService("audio", new Bomberman.Audio());
+    JAK.ServiceLocator.addService("socket", new Bomberman.SocketIO('http://localhost'));
+
+    var bombermanSocketIO = JAK.ServiceLocator.getService("socket");
+    var socket = bombermanSocketIO.getSocket();
+
+    socket.on('afterConnect', function(player){
+        bombermanSocketIO._serverReturnPlayer(player);
+    })
+    socket.on('players', function(players){
+        console.log(players);
+    })
