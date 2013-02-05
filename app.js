@@ -40,16 +40,15 @@ var players = {}; //player = {socket.id: {alive: true, position: {x: 0, y: 0}}}
 
 io.sockets.on('connection', function(socket){
   socket.emit("afterConnect", players[socket.id] = {alive: true, position: {x: 0, y: 0}, spectator: true, connected: Date.now()});
-  socket.emit("players", players);
+  io.sockets.emit("players", players);
 
   socket.on("eventPlayer", function(player){
-    console.log(player);
     players[socket.id] = player;
-    // rozesli to vsem ze se pohnul hrac
   });
 
   socket.on('disconnect', function () {
     delete players[socket.id];
     io.sockets.emit('afterDisconnect'); // odebrat hrace z mapy
+    io.sockets.emit("players", players);
   });
 });

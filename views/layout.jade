@@ -2,10 +2,12 @@ doctype 5
 html
   head
     title= title
+    link(rel='stylesheet', href='/stylesheets/bootstrap.css')
     link(rel='stylesheet', href='/stylesheets/screen.css')
     link(rel='stylesheet', href='/stylesheets/clouds.css')
     script(src='/javascripts/lib/jak.js')
     script(src='/javascripts/lib/servicelocator.js')
+    script(src='/javascripts/lib/creatortable.js')
     script
         var Bomberman = JAK.ClassMaker.makeClass({
             NAME: "Bomberman",

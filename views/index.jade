@@ -1,6 +1,9 @@
 extends layout
 
 block content
+  #players
+    #playersTable
+    #loader
   #clouds
     .cloud.x1
     .cloud.x2
@@ -10,18 +13,34 @@ block content
     #game
         canvas#cns
 
-
   script
-    // takhle piseme skripty
     JAK.ServiceLocator.addService("audio", new Bomberman.Audio());
     JAK.ServiceLocator.addService("socket", new Bomberman.SocketIO('http://localhost'));
 
+    //
     var bombermanSocketIO = JAK.ServiceLocator.getService("socket");
     var socket = bombermanSocketIO.getSocket();
 
-    socket.on('afterConnect', function(player){
-        bombermanSocketIO._serverReturnPlayer(player);
-    })
+    socket.on('afterConnect', function(player, players){
+        //bombermanSocketIO._serverReturnPlayer(player);
+    });
+
+    // zobraz vsechny pripojene hrace
     socket.on('players', function(players){
-        console.log(players);
-    })
+        var playersTable = JAK.gel("playersTable");
+        var table = new CreatorTable("players");
+
+        table.setColumns({id: "id", connected: "Connected", spectator: "Spectator"});
+
+        for(var key in players){
+          table.addRow({id: key.substr(0, 5), connected: players[key].connected, spectator: players[key].spectator });
+        }
+        var tableHTML = table.toHTML();
+        tableHTML.className = "table";
+        JAK.DOM.clear(playersTable);
+        playersTable.appendChild(tableHTML);
+    });
+    
+    //var bombermanMap = new Bomberman.Map(JAK.gel("cns"), JAK.gel("game"));
+    //map.addPlayer(new Bomberman.Player.Human("Bomberman", map));
+    //window.setInterval(function(){map.refresh()}, 200);
