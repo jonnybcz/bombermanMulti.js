@@ -37,10 +37,35 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 
 var io = require('socket.io').listen(server);
 var players = {}; //player = {socket.id: {alive: true, position: {x: 0, y: 0}}}
+var playersCount = 0;
+var gameIsRunning = false;
+
+var game = {
+  setPosition: function(players){
+    var position = 0;
+    for (var key in players) {
+      players[key].position = position;
+    }
+  }
+};
 
 io.sockets.on('connection', function(socket){
   socket.emit("afterConnect", players[socket.id] = {alive: true, position: {x: 0, y: 0}, spectator: true, connected: Date.now()});
   io.sockets.emit("players", players);
+  playersCount++;
+
+  function startGame(){
+    gameIsRunning = true;
+    io.sockets.emit("startGame", game.setPosition(players));
+  }
+
+  function endGame(){
+    gameIsRunning = false;
+  }
+
+  if (playersCount >= 2 /*&& !gameIsRunning*/) startGame();
+
+  if (playersCount < 2 && gameIsRunning) endGame();
 
   socket.on("eventPlayer", function(player){
     players[socket.id] = player;
@@ -48,6 +73,7 @@ io.sockets.on('connection', function(socket){
 
   socket.on('disconnect', function () {
     delete players[socket.id];
+    playersCount--;
     io.sockets.emit('afterDisconnect'); // odebrat hrace z mapy
     io.sockets.emit("players", players);
   });

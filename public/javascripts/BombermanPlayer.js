@@ -7,8 +7,8 @@ Bomberman.Player = JAK.ClassMaker.makeClass({
 	VERSION: "1.0"
 });
 
-Bomberman.Player.prototype.$constructor = function(nick, map){
-	this._nick = nick;
+Bomberman.Player.prototype.$constructor = function(playerData, map){
+	this._playerData = playerData;
 	this._map = map;
 	this._position = {x: 0, y: 0}
 	this._dead = false;

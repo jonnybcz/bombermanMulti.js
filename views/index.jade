@@ -14,10 +14,11 @@ block content
         canvas#cns
 
   script
+    var game = new Bomberman.Game(JAK.gel("players"));
     JAK.ServiceLocator.addService("audio", new Bomberman.Audio());
     JAK.ServiceLocator.addService("socket", new Bomberman.SocketIO('http://localhost'));
 
-    //
+    
     var bombermanSocketIO = JAK.ServiceLocator.getService("socket");
     var socket = bombermanSocketIO.getSocket();
 
@@ -27,20 +28,13 @@ block content
 
     // zobraz vsechny pripojene hrace
     socket.on('players', function(players){
-        var playersTable = JAK.gel("playersTable");
-        var table = new CreatorTable("players");
-
-        table.setColumns({id: "id", connected: "Connected", spectator: "Spectator"});
-
-        for(var key in players){
-          table.addRow({id: key.substr(0, 5), connected: players[key].connected, spectator: players[key].spectator });
-        }
-        var tableHTML = table.toHTML();
-        tableHTML.className = "table";
-        JAK.DOM.clear(playersTable);
-        playersTable.appendChild(tableHTML);
+        game.playersUpdate(players);
+    });
+    // hra zacina
+    socket.on('startGame', function(playingPlayers){
+        game.start(playingPlayers);
     });
     
-    //var bombermanMap = new Bomberman.Map(JAK.gel("cns"), JAK.gel("game"));
+    //
     //map.addPlayer(new Bomberman.Player.Human("Bomberman", map));
     //window.setInterval(function(){map.refresh()}, 200);

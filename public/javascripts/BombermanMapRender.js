@@ -26,7 +26,7 @@ Bomberman.Map.Render.prototype._preLoadTextures = function(){
 
 	for (var i = 0; i < textures.length; i++) {
 		var image = new Image();
-		image.src = "img/textures/" + textures[i] + ".svg";
+		image.src = "/images/textures/" + textures[i] + ".svg";
 
 		texturesObject[textures[i]] = image;
 	}
@@ -34,10 +34,14 @@ Bomberman.Map.Render.prototype._preLoadTextures = function(){
 	this._textures = texturesObject;
 }
 
+Bomberman.Map.Render.prototype._renderPermanentThings = function(){
+	this._insertToMap(this._map.getStones());
+	this._insertToMap(this._map.getRespawns());
+}
+
 // vykresli canvas
 Bomberman.Map.Render.prototype.canvas = function(){
 	this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.width);
-	this._insertToMap(this._map.getStones());
 	this._insertToMap(this._map.getDoor());
 	this._insertToMap(this._map.getBoxes());
 	this._insertToMap(this._map.getBombs());
@@ -61,8 +65,11 @@ Bomberman.Map.Render.prototype._insertToMap = function(something){
 
 		if(something[i] instanceof Bomberman.Player.Monster){
 			this._putCell(pos.x, pos.y, "purple");	
-			this._putImageCell(pos.x, pos.y, something[i].getKind());
 		} 
+
+		if(something[i] instanceof Bomberman.Respawn){
+			this._putCell(pos.x, pos.y, "purple");
+		}
 
 		if(something[i] instanceof Bomberman.Stone){
 			this._putCell(pos.x, pos.y, "grey");

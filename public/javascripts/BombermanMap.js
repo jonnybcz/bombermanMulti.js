@@ -7,44 +7,45 @@ Bomberman.Map = JAK.ClassMaker.makeClass({
 	VERSION: "1.0"
 });
 
-Bomberman.Map.prototype.$constructor = function(canvas, gameBoard){
+Bomberman.Map.prototype.$constructor = function(canvas, gameBoard, countPlayers){
 	this._gameMapSize = {x: gameBoard.offsetWidth, y: gameBoard.offsetHeight};
 	this._canvas = canvas;
 	this._gameBoard = gameBoard;
+	this._countPlayers = countPlayers;
 
-	this._width = null;
-	this._height = null;
-	this._cellSize = null;
-	this._columns = null;
-	this._rows = null;
+	this._cellSize = 40;
+	this._columns = 13;
+	this._rows = 13;
+	this._width = this._cellSize * this._rows;
+	this._height = this._width;
 
-	this._setInitSizeAndColumns();
+	this._gameBoard.style.width = this._width.toString() + "px";
+	this._gameBoard.style.height = this._height.toString() + "px";
+
+	//this._setInitSizeAndColumns();
 	this._setCenterGameWindow();
 	
-	this._gameOver = false;
-
 	this._stones = [];
 	this._boxes = [];
 	this._bombs = [];
 	this._explosions = []; // tady se presouva po vybuchnuti bomba
 	this._players = [];
 	this._respawns = [];
-	this._door = [];
 
-	this._countMonsters = 0;
 	this._canvas.width = this._width;
 	this._canvas.height = this._height;
 	
 	this._buildStones();
-	this._buildBoxesAndDoor();
-	this._buildRespawns();
+	this._createRespawns();
+	//this._buildBoxesAndDoor();
 
 	this._render = new Bomberman.Map.Render(this);
+	this._render._renderPermanentThings(); //stones, doors, etc..
 }
 
 /* NOVE FUNKCE */
 Bomberman.Map.prototype._setInitSizeAndColumns = function(){
-	var defaultCellSize = 50; //px
+	var defaultCellSize = 30; //px
 	var width = Math.ceil(this._gameMapSize.x);
 	var height = Math.ceil(this._gameMapSize.y);
 	var maxWidth = 0;
@@ -90,20 +91,16 @@ Bomberman.Map.prototype.getCanvas = function(){
 	return this._canvas;
 }
 
+Bomberman.Map.prototype.getRespawns = function(){
+	return this._respawns;
+}
+
 Bomberman.Map.prototype.getStones = function(){
 	return this._stones;
 }
 
-Bomberman.Map.prototype.getDoor = function(){
-	return this._door;
-}
-
 Bomberman.Map.prototype.getPlayers = function(){
 	return this._players;
-}
-
-Bomberman.Map.prototype.getRespawns = function(){
-	return this._respawns;
 }
 
 Bomberman.Map.prototype.getBombs = function(){
@@ -179,33 +176,41 @@ Bomberman.Map.prototype.refresh = function(){
 }
 
 Bomberman.Map.prototype._win = function(){
-	var players = this._players;
-	var doors = this._door;
-	var countMonsters = this._countMonsters;
 
-	for (var i = 0; i < players.length; i++) {
-		if(players[i] instanceof Bomberman.Player.Human){
-			var playerPos = players[i].getPosition();
-
-			for (var j = 0; j < doors.length; j++) {
-				var doorPos = doors[j].getPosition();
-				
-				if(doorPos.x == playerPos.x && doorPos.y == playerPos.y && countMonsters == 0){
-					JAK.gel("game").appendChild(JAK.mel("div", {innerHTML: "!!! YOU WIN !!!", id: "win"}));
-				}
-			}
-		}
-	}
 }
 
 Bomberman.Map.prototype._GO = function(){
-	this._gameOver = true;
-	var place = JAK.gel("game");
-	var textGO = JAK.mel("div", {innerHTML: "GAME OVER", id: "gameOver"});
-	var audio = JAK.ServiceLocator.getService("audio");
-	audio.play("gameOver");
 
-	place.appendChild(textGO);
+}
+
+Bomberman.Map.prototype._createRespawns = function(){
+	var cellSize = this._cellSize;
+	var columns = this._columns;
+	var rows = this._rows;
+	var bottom = rows * cellSize - cellSize * 2;
+	var right = cellSize * columns - cellSize * 2;
+
+	var positions = [
+		{x: cellSize, y: cellSize}, {x: cellSize * 2, y: cellSize}, {x: cellSize, y: cellSize * 2}, //leftCornerTop
+		{x: right, y: cellSize}, {x: cellSize * columns - cellSize * 3, y: cellSize}, {x: right, y: cellSize * 2}, //RightCornerTop
+		{x: cellSize * ((columns - 1)/2), y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize * 2}, //TopMiddle
+		{x: cellSize * ((columns - 1)/2), y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize * 2}, //middle left border
+
+		{x: cellSize, y: bottom}, {x: cellSize, y: rows * cellSize - cellSize * 3}, {x: cellSize * 2, y: bottom}, //leftCornerBottom
+		{x: right, y: bottom}, {x: cellSize * columns - cellSize * 3, y: bottom}, {x: right, y: rows * cellSize - cellSize * 3}, //RightCornerBottom
+		{x: cellSize * ((columns - 1)/2), y: bottom}, {x: cellSize * ((columns - 1)/2) - cellSize, y: bottom}, {x: cellSize * ((columns - 1)/2) - cellSize, y: rows * cellSize - cellSize * 3}, //MiddleBottom
+		{x: cellSize * ((columns - 1)/2), y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize}, {x: cellSize * ((columns - 1)/2) - cellSize, y: cellSize * 2}, //middle left border
+
+		{x: cellSize, y: ((rows - 1)/2) * cellSize}, {x: cellSize, y: ((rows - 1)/2) * cellSize - cellSize}, {x: cellSize * 2, y: ((rows - 1)/2) * cellSize - cellSize}, //left border middle
+
+		{x: right, y: ((rows - 1)/2) * cellSize}, {x: right, y: ((rows - 1)/2) * cellSize - cellSize}, {x: right - cellSize, y: ((rows - 1)/2) * cellSize - cellSize} //right border middle
+	];
+	
+
+ 	
+	for (var i = 0; i < positions.length; i++) {
+		this._respawns.push(new Bomberman.Respawn(positions[i], cellSize));
+	}
 }
 
 Bomberman.Map.prototype._killPlayers = function(){
@@ -313,32 +318,13 @@ Bomberman.Map.prototype._buildBoxesAndDoor = function(){
 		for (var j = 1; j <= rows; j++) {
 			var pos = {x: i * cellSize, y: j * cellSize};
 			if(this._isCellEmpty(pos) && Math.random() * (10 - 0) + 0 < chancePutBox) boxes.push(new Bomberman.Box(pos, cellSize));
-			if(!existDoor && this._isCellEmpty(pos) && Math.random() * (15 - 0) + 0 < 3){
-				this._door.push(new Bomberman.Door(pos, cellSize));
-				existDoor = true;
-			}
+		
 		}
 	}
 
-	if(!existDoor) {
-		this._door.push(new Bomberman.Door({x: this._width - cellSize * 2, y: this._height - cellSize * 2}, cellSize));
-	}
+	
 }
 
-Bomberman.Map.prototype._buildRespawns = function(){
-	var respawns = this._respawns;
-	var columns = this._columns;
-	var rows = this._rows;
-
-	respawns.push(new Bomberman.Respawn({x: this._cellSize, y: this._cellSize}, this._cellSize));
-	for (var i = 1; i < columns; i++) {
-		for (var j = 1; j < rows; j++) {
-			if(!(i % 3) && !(j % 3)) respawns.push(new Bomberman.Respawn({x: i * this._cellSize, y: j * this._cellSize}, this._cellSize));
-		}
-	}	
-
-	respawns.reverse();
-}
 
 Bomberman.Map.prototype._removeBoxesAroundPlayer = function(playerPos){
 	var boxes = this._boxes;
@@ -362,14 +348,11 @@ Bomberman.Map.prototype._removeBoxesAroundPlayer = function(playerPos){
 }
 
 Bomberman.Map.prototype.addPlayer = function(player){
-	var respawns = this.getRespawns();
-	var respawnPos = respawns.pop().getPosition();
-	
-	player.setPosition(respawnPos);
-	this._players.push(player);
-	this._removeBoxesAroundPlayer(player.getPosition());
+	//player.setPosition(respawnPos);
+	//this._players.push(player);
+	//this._removeBoxesAroundPlayer(player.getPosition());
 
-	if (player instanceof Bomberman.Player.Monster) this._countMonsters++;
+	//if (player instanceof Bomberman.Player.Monster) this._countMonsters++;
 }
 
 Bomberman.Map.prototype.canIMoveThere = function(direction, player){
@@ -474,13 +457,3 @@ Bomberman.Map.prototype._isCellEmpty = function(position){
 	// proiteruje a udela priniky pres vsechny bednicky
 }
 
-Bomberman.Map.prototype.debug = function(ctx){
-	console.log("============ DEBUG ============");
-
-	console.log("sirka: " + ctx.canvas.offsetWidth.toString());
-	console.log("vyska: " + ctx.canvas.offsetHeight.toString());
-	console.log("font: " + ctx.font.toString());
-
-	console.log("============ END DEBDUG ============");
-	console.log(ctx);
-}
